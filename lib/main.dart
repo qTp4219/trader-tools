@@ -9,7 +9,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Trader Tools',
       theme: ThemeData(
         // Toolbar color
         primarySwatch: Colors.blue,
@@ -42,18 +42,25 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  // static value
+  Color activeColor = Color.fromARGB(1, 240, 185, 9);
+  Color mainColor = Color.fromARGB(1, 30, 34, 38);
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  // api value
+  String pairValue = "BTC/USDT";
+  double currentPrice = 11000;
+
+  // master value
+  double maxPositionAmount = 20;
+  int stopLossRation = 20;
+
+  // base value
+  bool isLong = true;
+  int margin = 20;
+  double entryPrice = 0, exitPrice = 0;
+
+  // calculate value
+  double pnlPricePercent = 0, quantity = 0, roePrice = 0, roePricePercent = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -116,13 +123,169 @@ class _MyHomePageState extends State<MyHomePage> {
           // Column is also a layout widget. It takes a list of children and
           // arranges them vertically. By default, it sizes itself to fit its
           // children horizontally, and tries to be as tall as its parent.
+          children: <Widget>[
+            Row(children: [
+              Expanded(
+                child: DropdownButton<String>(
+                    value: pairValue,
+                    onChanged: (String newValue) {
+                      setState(() {
+                        pairValue = newValue;
+                      });
+                    },
+                    items: <String>['BTC/USDT', 'ETH/USDT', 'ADA/USDT']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList()), // pair value
+              ),
+              Expanded(
+                child: Text(this.currentPrice.toString()),
+              ),
+              Expanded(
+                child: Text("Margin"),
+              ),
+              Expanded(
+                  child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: TextEditingController()
+                        ..text = this.margin.toString(),
+                      onChanged: (text) => {
+                            this.setState(() {
+                              this.margin = int.parse(text);
+                            })
+                          }))
+            ]), // general info
+            Row(children: [
+              Expanded(
+                  child: RaisedButton(
+                      child: new Text("LONG"),
+                      color: this.mainColor,
+                      disabledColor: this.activeColor,
+                      onPressed: this.isLong
+                          ? null
+                          : () {
+                              setState(() {
+                                isLong = true;
+                              });
+                            })),
+              Expanded(
+                  child: RaisedButton(
+                      child: new Text("SHORT"),
+                      color: this.mainColor,
+                      disabledColor: this.activeColor,
+                      onPressed: !this.isLong
+                          ? null
+                          : () {
+                              setState(() {
+                                isLong = false;
+                              });
+                            }))
+            ]), // mode
+            Row(children: [
+              Expanded(
+                child: Text("Amount"),
+              ),
+              Expanded(
+                  child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: TextEditingController()
+                        ..text = this.maxPositionAmount.toString(),
+                      onChanged: (text) => {
+                            this.setState(() {
+                              this.maxPositionAmount = double.parse(text);
+                            })
+                          })),
+              Expanded(
+                child: Text("SL Ratio"),
+              ),
+              Expanded(
+                  child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: TextEditingController()
+                        ..text = this.stopLossRation.toString(),
+                      onChanged: (text) => {
+                            this.setState(() {
+                              this.stopLossRation = int.parse(text);
+                            })
+                          }))
+            ]),
+            Row(children: [
+              Expanded(
+                child: Text("Entry Price"),
+              ),
+              Expanded(
+                  child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: TextEditingController()
+                        ..text = this.entryPrice.toString(),
+                      onChanged: (text) => {
+                            this.setState(() {
+                              this.entryPrice = double.parse(text);
+                            })
+                          })),
+              Expanded(
+                child: Text("Exit Price"),
+              ),
+              Expanded(
+                  child: TextField(
+                      keyboardType: TextInputType.number,
+                      controller: TextEditingController()
+                        ..text = this.exitPrice.toString(),
+                      onChanged: (text) => {
+                            this.setState(() {
+                              this.exitPrice = double.parse(text);
+                            })
+                          }))
+            ]),
+            Expanded(
+                child: Text(
+              this.pnlPricePercent.toString(),
+              style: TextStyle(fontWeight: FontWeight.bold),
+            )),
+            Expanded(
+                child: Text(
+              this.quantity.toString(),
+              style: TextStyle(fontWeight: FontWeight.bold),
+            )),
+            Expanded(
+                child: Text(
+              "ROE",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            )),
+            Row(
+              children: [
+                Expanded(
+                    child: Text(
+                  this.roePrice.toString(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                )),
+                Expanded(
+                    child: Text(
+                  this.roePricePercent.toString(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                )),
+              ],
+            ),
+            Row(children: [
+              Expanded(child:
+                FlatButton(
+                child: new Text("CALCULATE"),
+                onPressed: (null),
+              )),
+              Expanded(child:
+                FlatButton(
+                child: new Text("PUBLISH"),
+                onPressed: (null),
+              ))
+            ],)
+          ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
